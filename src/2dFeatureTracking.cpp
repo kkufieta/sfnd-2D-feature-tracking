@@ -98,12 +98,24 @@ int main(int argc, const char *argv[]) {
     // only keep keypoints on the preceding vehicle
     bool bFocusOnVehicle = true;
     cv::Rect vehicleRect(535, 180, 180, 150);
+    vector<cv::KeyPoint> focusedKeypoints;
     if (bFocusOnVehicle) {
-      // ...
+      for (cv::KeyPoint keypoint : keypoints) {
+        if (vehicleRect.contains(keypoint.pt)) {
+          focusedKeypoints.push_back(keypoint);
+        }
+      }
     }
+    keypoints = focusedKeypoints;
 
-    //// EOF STUDENT ASSIGNMENT
-
+    if (bVis) {
+      cv::Mat vis_image = imgGray.clone();
+      cv::drawKeypoints(img, focusedKeypoints, vis_image);
+      string windowName = "Focused keypoints";
+      cv::namedWindow(windowName, 6);
+      cv::imshow(windowName, vis_image);
+      cv::waitKey(0);
+    }
     // optional : limit number of keypoints (helpful for debugging and
     // learning)
     bool bLimitKpts = false;
