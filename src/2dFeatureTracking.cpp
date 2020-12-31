@@ -77,19 +77,20 @@ int main(int argc, const char *argv[]) {
     // extract 2D keypoints from current image
     vector<cv::KeyPoint>
         keypoints; // create empty feature list for current image
-    string detectorType = "SHITOMASI";
+    bool bVis = true;
 
-    //// STUDENT ASSIGNMENT
-    //// TASK MP.2 -> add the following keypoint detectors in file
-    /// matching2D.cpp and enable string-based selection based on detectorType /
-    ///-> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    // Detector types:
+    // -> Gradient Based: HARRIS, SHITOMASI, SIFT
+    // -> Binary: BRISK, ORB, AKAZE, FAST
+    string detectorType = "FAST";
 
     if (detectorType.compare("SHITOMASI") == 0) {
-      detKeypointsShiTomasi(keypoints, imgGray, false);
+      detKeypointsShiTomasi(keypoints, imgGray, bVis);
+    } else if (detectorType.compare("HARRIS") == 0) {
+      detKeypointsHarris(keypoints, imgGray, bVis);
     } else {
-      //...
+      detKeypointsModern(keypoints, imgGray, detectorType, bVis);
     }
-    //// EOF STUDENT ASSIGNMENT
 
     //// STUDENT ASSIGNMENT
     //// TASK MP.3 -> only keep keypoints on the preceding vehicle
@@ -103,7 +104,8 @@ int main(int argc, const char *argv[]) {
 
     //// EOF STUDENT ASSIGNMENT
 
-    // optional : limit number of keypoints (helpful for debugging and learning)
+    // optional : limit number of keypoints (helpful for debugging and
+    // learning)
     bool bLimitKpts = false;
     if (bLimitKpts) {
       int maxKeypoints = 50;
@@ -153,7 +155,8 @@ int main(int argc, const char *argv[]) {
 
       //// STUDENT ASSIGNMENT
       //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
-      //// TASK MP.6 -> add KNN match selection and perform descriptor distance
+      //// TASK MP.6 -> add KNN match selection and perform descriptor
+      /// distance
       /// ratio filtering with t=0.8 in file matching2D.cpp
 
       matchDescriptors((dataBuffer.end() - 2)->keypoints,
