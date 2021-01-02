@@ -107,8 +107,8 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
-void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
-                           bool bVis) {
+float detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
+                            bool bVis) {
   // compute detector parameters based on image size
   int blockSize = 4; //  size of an average block for computing a derivative
                      //  covariation matrix over each pixel neighborhood
@@ -148,11 +148,12 @@ void detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     imshow(windowName, visImage);
     cv::waitKey(0);
   }
+  return 1000 * t / 1.0;
 }
 
 // Detect keypoints in image using the traditional Harris detector
-void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
-                        bool bVis) {
+float detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
+                         bool bVis) {
   // compute detector parameteres based on image size
   int blockSize = 2;
   int apertureSize = 3; // Aperture parameter for Sobel parameter
@@ -215,11 +216,12 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     cv::imshow(windowName, vis_image);
     cv::waitKey(0);
   }
+  return 1000 * t / 1.0;
 }
 
 // SIFT, FAST, BRISK, ORB, AKAZE
-void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
-                        std::string detectorType, bool bVis) {
+float detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
+                         std::string detectorType, bool bVis) {
   // Detect keypoints
   double t = (double)cv::getTickCount();
   if (detectorType.compare("SIFT") == 0) {
@@ -242,4 +244,5 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
   cout << detectorType << " corner detection with n=" << keypoints.size()
        << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  return 1000 * t / 1.0;
 }

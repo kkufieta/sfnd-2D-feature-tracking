@@ -47,6 +47,17 @@ int main(int argc, const char *argv[]) {
 
   /* MAIN LOOP OVER ALL IMAGES */
 
+  vector<float> totalNumKeypoints;
+  vector<float> detectTimes;
+  vector<float> reducedNumKeypoints;
+  vector<float> meanValues;
+  vector<float> stddevValues;
+
+  // Detector types:
+  // -> Gradient Based: HARRIS, SHITOMASI, SIFT
+  // -> Binary: BRISK, ORB, AKAZE, FAST
+  string detectorType = "FAST";
+
   for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex;
        imgIndex++) {
     /* LOAD IMAGE INTO BUFFER */
@@ -78,20 +89,22 @@ int main(int argc, const char *argv[]) {
     // extract 2D keypoints from current image
     vector<cv::KeyPoint>
         keypoints; // create empty feature list for current image
-    bool bVis = true;
+    bool bVis = false;
 
     // Detector types:
     // -> Gradient Based: HARRIS, SHITOMASI, SIFT
     // -> Binary: BRISK, ORB, AKAZE, FAST
-    string detectorType = "HARRIS";
 
+    float detectTime;
     if (detectorType.compare("SHITOMASI") == 0) {
-      detKeypointsShiTomasi(keypoints, imgGray, bVis);
+      detectTime = detKeypointsShiTomasi(keypoints, imgGray, bVis);
     } else if (detectorType.compare("HARRIS") == 0) {
-      detKeypointsHarris(keypoints, imgGray, bVis);
+      detectTime = detKeypointsHarris(keypoints, imgGray, bVis);
     } else { // SIFT, BRISK, ORB, AKAZE, FAST
-      detKeypointsModern(keypoints, imgGray, detectorType, bVis);
+      detectTime = detKeypointsModern(keypoints, imgGray, detectorType, bVis);
     }
+    totalNumKeypoints.push_back(keypoints.size());
+    detectTimes.push_back(detectTime);
 
     // only keep keypoints on the preceding vehicle
     bool bFocusOnVehicle = true;
@@ -107,6 +120,7 @@ int main(int argc, const char *argv[]) {
     keypoints = focusedKeypoints;
     cout << "After focusing on car ahead, number of keypoints: "
          << keypoints.size() << ", " << focusedKeypoints.size() << endl;
+    reducedNumKeypoints.push_back(keypoints.size());
 
     auto sum_kps = [](float a, cv::KeyPoint kp) { return a + kp.size; };
     float mean = accumulate(keypoints.begin(), keypoints.end(), 0.0, sum_kps) /
@@ -118,6 +132,8 @@ int main(int argc, const char *argv[]) {
         accumulate(keypoints.begin(), keypoints.end(), 0.0, variance_kps) /
         keypoints.size();
 
+    meanValues.push_back(mean);
+    stddevValues.push_back(variance);
     cout << "Average keypoint size: " << mean << endl;
     cout << "Variance: " << variance << endl;
 
@@ -185,7 +201,7 @@ int main(int argc, const char *argv[]) {
       cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
       // visualize matches between current and previous image
-      bVis = true;
+      bVis = false;
       if (bVis) {
         cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
         cv::drawMatches((dataBuffer.end() - 2)->cameraImg,
@@ -206,6 +222,29 @@ int main(int argc, const char *argv[]) {
     }
 
   } // eof loop over all images
+
+  auto printStats = [](vector<float> stats) {
+    float sum = 0;
+    for (auto n : stats) {
+      cout << n << " | ";
+      sum += n;
+    }
+    cout << sum / 10 << " | " << endl;
+  };
+  cout << "| " << detectorType << " | # keypoints | ";
+  printStats(totalNumKeypoints);
+
+  cout << "| | Time [ms] | ";
+  printStats(detectTimes);
+
+  cout << "| | # selected keypoints | ";
+  printStats(reducedNumKeypoints);
+
+  cout << "| | avg. keypoint size | ";
+  printStats(meanValues);
+
+  cout << "| | keypoint size std dev | ";
+  printStats(stddevValues);
 
   return 0;
 }
