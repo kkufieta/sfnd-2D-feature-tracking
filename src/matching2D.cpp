@@ -15,22 +15,59 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
   cv::Ptr<cv::DescriptorMatcher> matcher;
 
   if (matcherType.compare("MAT_BF") == 0) {
-    int normType = cv::NORM_HAMMING;
+    int normType = descriptorType.compare("DES_BINARY") == 0 ? cv::NORM_HAMMING
+                                                             : cv::NORM_L2;
     matcher = cv::BFMatcher::create(normType, crossCheck);
+    cout << "BF matching";
   } else if (matcherType.compare("MAT_FLANN") == 0) {
-    // ...
+    if (descSource.type() != CV_32F) { // OpenCV bug workaround : convert binary
+                                       // descriptors to floating point due to a
+                                       // bug in current OpenCV implementation
+      descSource.convertTo(descSource, CV_32F);
+      descRef.convertTo(descRef, CV_32F);
+    }
+    matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+    cout << "FLANN matching";
   }
 
   // perform matching task
   if (selectorType.compare("SEL_NN") == 0) { // nearest neighbor (best match)
-
+    double t = (double)cv::getTickCount();
     matcher->match(
         descSource, descRef,
         matches); // Finds the best match for each descriptor in desc1
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << " (NN) with n=" << matches.size() << " matches in "
+         << 1000 * t / 1.0 << " ms" << endl;
   } else if (selectorType.compare("SEL_KNN") ==
              0) { // k nearest neighbors (k=2)
 
-    // ...
+    // Implement k-nearest-neighbor matching
+    vector<vector<cv::DMatch>> knnMatches;
+    int k = 2;
+    double t = (double)cv::getTickCount();
+    matcher->knnMatch(descSource, descRef, knnMatches,
+                      2); // finds the 2 best matches
+    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << " (kNN) with k=2 and n=" << knnMatches.size() << " matches in "
+         << 1000 * t / 1.0 << " ms" << endl;
+
+    // Filter matches using descriptor distance ratio test
+    float ratio;
+    int numTotalMatches = knnMatches.size();
+    int numDiscardedMatches = 0;
+    double minDistanceRatio = 0.8;
+    for (vector<cv::DMatch> kMatch : knnMatches) {
+      ratio = kMatch[0].distance / kMatch[1].distance;
+      if (ratio <= minDistanceRatio) {
+        matches.push_back(kMatch[0]);
+      } else {
+        numDiscardedMatches += 1;
+      }
+    }
+    cout << "Number discarded matches: " << numDiscardedMatches << endl;
+    cout << "Percentage discarded matches: "
+         << numDiscardedMatches / (float)numTotalMatches << endl;
   }
 }
 
@@ -48,9 +85,17 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
                                // sampling the neighbourhood of a keypoint.
 
     extractor = cv::BRISK::create(threshold, octaves, patternScale);
-  } else {
-
-    //...
+  } else if (descriptorType.compare("SIFT") == 0) {
+    extractor = cv::SIFT::create();
+  } else if (descriptorType.compare("ORB") == 0) {
+    extractor = cv::ORB::create();
+  } else if (descriptorType.compare("AKAZE") ==
+             0) { // works only with AKAZE keypoints
+    extractor = cv::AKAZE::create();
+  } else if (descriptorType.compare("BRIEF") == 0) {
+    extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
+  } else if (descriptorType.compare("FREAK") == 0) {
+    extractor = cv::xfeatures2d::FREAK::create();
   }
 
   // perform feature description
@@ -196,14 +241,4 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
   cout << detectorType << " corner detection with n=" << keypoints.size()
        << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
-
-  if (bVis) {
-    // visualize results
-    cv::Mat vis_image = img.clone();
-    cv::drawKeypoints(img, keypoints, vis_image);
-    string windowName = detectorType + " Corner Detector";
-    cv::namedWindow(windowName, 6);
-    cv::imshow(windowName, vis_image);
-    cv::waitKey(0);
-  }
 }
