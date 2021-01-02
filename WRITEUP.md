@@ -222,6 +222,19 @@ Task: Count the number of keypoints on the preceding vehicle for all 10 images a
 | | keypoint size std dev | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
 
 
+Comparing the average stats:
+
+| Detector | # keypoints | Time [ms] | # selected keypoints | avg. keypoint size | keypoint size std dev | 
+|:--|:--|:--|:--|:--|:--|
+| Harris | 171 | 8.42 | 24.8 | 6 | 0 |
+| Shitomasi | 1342 | 11.34 | 118 | 4 | 0 |
+| SIFT | 1383 | 149.2 | 138 | 5 | 35.7 |
+| BRISK | 2711 | 63 | 276.2 | 22 | 213.3 |
+| ORB | 500 | 18.5 | 116 | 56 | 632 |
+| AKAZE | 1343 | 93.5 | 167 | 7.7 | 12.5 |
+| FAST | 4920.4 | 2.2 | 409 | 7 | 0 |
+
+
 ### Count number of matched keypoints
 Task: Count the number of matched keypoints for all 10 images using all possible combinations of detectors and descriptors. In the matching step, the BF approach is used with the descriptor distance ratio set to 0.8.
 
