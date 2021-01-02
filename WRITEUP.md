@@ -190,7 +190,38 @@ Task: Count the number of keypoints on the preceding vehicle for all 10 images a
 | | # selected keypoints | 17 | 14 | 18 | 21 | 26 | 43 | 18 | 31 | 26 | 34 | 24.8 |
 | | mean | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 6 | 
 | | std dev | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
+| SHITOMASI | # keypoints | 1370 | 1301 | 1361 | 1358 | 1333 | 1284 | 1322 | 1366 | 1389 | 1339 | 1342.3 |
+| | Time [ms] | 15.5 | 12.7 | 10.7 | 10.8 | 10.9 | 10.9 | 11.1 | 10.4 | 10.4 | 10 | 11.34 |
+| | # selected keypoints | 125 | 118 | 123 | 120 | 120 | 113 | 114 | 123 | 111 | 112 | 117.9 |
+| | mean | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 4 | 
+| | std dev | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
+| SIFT | # keypoints | 1438 | 1371 | 1380 | 1335 | 1304 | 1369 | 1369 | 1382 | 1462 | 1422 | 1383.2 |
+| | Time [ms] | 190.8 | 169.7 | 161.6 | 141.5 | 140.4 | 136.8 | 137.3 | 140.2 | 135.5 | 138.6 | 149.2 |
+| | # selected keypoints | 138 | 132 | 124 | 137 | 134 | 140 | 137 | 148 | 159 | 137 | 138 |
+| | mean | 4.98 | 5.1 | 4.9 | 4.7 | 4.7 | 4.7 | 5.4 | 4.6 | 5.5 | 5.6 | 5.0 | 
+| | std dev | 35.2 | 38.1 | 36.2 | 27.5 | 30.4 | 31.1 | 42.4 | 26.5 | 44.5 | 44.6 | 35.7 | 
+| BRISK | # keypoints | 2757 | 2777 | 2741 | 2735 | 2757 | 2695 | 2715 | 2628 | 2639 | 2672 | 2711.6 | 
+| | Time [ms] | 78.8842 | 64.1708 | 61.6984 | 62.0059 | 61.3036 | 56.1614 | 59.3102 | 61.2397 | 62.2673 | 62.3111 | 62.9353 | 
+| | # selected keypoints | 264 | 282 | 282 | 277 | 297 | 279 | 289 | 272 | 266 | 254 | 276.2 | 
+| | mean | 21.5492 | 21.7853 | 21.6509 | 20.3583 | 22.5911 | 22.9442 | 21.8014 | 22.1472 | 22.5558 | 22.0389 | 21.9422 | 
+| | std dev | 212.496 | 212.129 | 191.029 | 159.23 | 220.702 | 249.964 | 215.379 | 226.018 | 230.701 | 215.124 | 213.277 | 
+| ORB | # keypoints |  |  |  |  |  |  |  |  |  |  |  |
+| | Time [ms] |  |  |  |  |  |  |  |  |  |  |  |
+| | # selected keypoints |  |  |  |  |  |  |  |  |  |  | |
+| | mean |  |  |  |  |  |  |  |  |  |  |  | 
+| | std dev |  |  |  |  |  |  |  |  |  |  |  | 
+| AKAZE | # keypoints |  |  |  |  |  |  |  |  |  |  |  |
+| | Time [ms] |  |  |  |  |  |  |  |  |  |  |  |
+| | # selected keypoints |  |  |  |  |  |  |  |  |  |  | |
+| | mean |  |  |  |  |  |  |  |  |  |  |  | 
+| | std dev |  |  |  |  |  |  |  |  |  |  |  | 
+| FAST | # keypoints |  |  |  |  |  |  |  |  |  |  |  |
+| | Time [ms] |  |  |  |  |  |  |  |  |  |  |  |
+| | # selected keypoints |  |  |  |  |  |  |  |  |  |  | |
+| | mean |  |  |  |  |  |  |  |  |  |  |  | 
+| | std dev |  |  |  |  |  |  |  |  |  |  |  | 
 
+ 
 
 ### Count number of matched keypoints
 Task: Count the number of matched keypoints for all 10 images using all possible combinations of detectors and descriptors. In the matching step, the BF approach is used with the descriptor distance ratio set to 0.8.
