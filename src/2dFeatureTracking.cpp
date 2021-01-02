@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <opencv2/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -104,6 +105,21 @@ int main(int argc, const char *argv[]) {
       }
     }
     keypoints = focusedKeypoints;
+    cout << "After focusing on car ahead, number of keypoints: "
+         << keypoints.size() << ", " << focusedKeypoints.size() << endl;
+
+    auto sum_kps = [](float a, cv::KeyPoint kp) { return a + kp.size; };
+    float mean = accumulate(keypoints.begin(), keypoints.end(), 0.0, sum_kps) /
+                 keypoints.size();
+    auto variance_kps = [mean](float a, cv::KeyPoint kp) {
+      return a + pow((kp.size - mean), 2);
+    };
+    float variance =
+        accumulate(keypoints.begin(), keypoints.end(), 0.0, variance_kps) /
+        keypoints.size();
+
+    cout << "Average keypoint size: " << mean << endl;
+    cout << "Variance: " << variance << endl;
 
     if (bVis) {
       cv::Mat vis_image = imgGray.clone();
@@ -134,7 +150,7 @@ int main(int argc, const char *argv[]) {
 
     /* EXTRACT KEYPOINT DESCRIPTORS */
     cv::Mat descriptors;
-    string descriptorType = "ORB"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
     descKeypoints((dataBuffer.end() - 1)->keypoints,
                   (dataBuffer.end() - 1)->cameraImg, descriptors,
                   descriptorType);

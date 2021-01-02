@@ -166,8 +166,6 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   double t = (double)cv::getTickCount();
   cv::cornerHarris(img, dst, blockSize, apertureSize, k, cv::BORDER_DEFAULT);
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-  cout << "Harris corner detection with n=" << keypoints.size()
-       << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
   cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
   cv::convertScaleAbs(dst_norm, dst_norm_scaled);
 
@@ -205,6 +203,9 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
       }
     }
   }
+
+  cout << "Harris corner detection with n=" << keypoints.size()
+       << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
   if (bVis) {
     // visualize results
     cv::Mat vis_image = dst_norm_scaled.clone();
