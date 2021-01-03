@@ -238,5 +238,57 @@ Comparing the average stats:
 ### Count number of matched keypoints
 Task: Count the number of matched keypoints for all 10 images using all possible combinations of detectors and descriptors. In the matching step, the BF approach is used with the descriptor distance ratio set to 0.8.
 
+Combinations:
+
+| Detector | Descriptor |
+|:-- |:--|
+| SIFT | SIFT |
+| AKAZE | AKAZE |
+|SHITOMASI | BRISK |
+|SHITOMASI | ORB |
+|SHITOMASI | BRIEF |
+|SHITOMASI | FREAK |
+|HARRIS | BRISK |
+|HARRIS | ORB |
+|HARRIS | BRIEF |
+|HARRIS | FREAK |
+|FAST | BRISK |
+|FAST | ORB |
+|FAST | BRIEF |
+|FAST | FREAK |
+|BRISK | BRISK |
+|BRISK | ORB |
+|BRISK | BRIEF |
+|BRISK | FREAK |
+|ORB | BRISK |
+|ORB | ORB |
+|ORB | BRIEF |
+|ORB | FREAK |
+
+| Detector | Descriptor | # avg. matched keypoints | avg. detect time [ms] | avg. describe time [ms] | avg. match time [ms] | avg. total processing time [ms] |
+|:--|:--|:--|:--|:--|:--|:--|
+| SIFT | SIFT | 88.8889 | 135.822 | 106.77 | 0.266392 | 242.858 | 
+| AKAZE | AKAZE | 139.889 | 76.9887 | 65.4199 | 0.255753 | 142.664 | 
+| SHITOMASI | BRISK | 85.2222 | 10.1842 | 1.39258 | 0.190058 | 11.7669 | 
+| SHITOMASI | ORB | 100.778 | 9.9952 | 3.06839 | 0.181007 | 13.2446 | 
+| SHITOMASI | BRIEF | 104.889 | 9.97391 | 0.844096 | 0.197855 | 11.0159 | 
+| SHITOMASI | FREAK | 85.1111 | 9.99266 | 23.6635 | 0.188879 | 33.8451 | 
+| HARRIS | BRISK | 15.1111 | 6.76695 | 0.5648 | 0.0670874 | 7.39884 | 
+| HARRIS | ORB | 17.4444 | 6.62285 | 2.51852 | 0.063271 | 9.20464 | 
+| HARRIS | BRIEF | 18.7778 | 6.81685 | 0.399588 | 0.0590446 | 7.27548 | 
+| HARRIS | FREAK | 15.6667 | 6.69206 | 22.5632 | 0.0671286 | 29.3224 | 
+| FAST | BRISK | 242.556 | 2.14689 | 4.02429 | 0.911821 | 7.08299 | 
+| FAST | ORB | 306.889 | 2.16057 | 3.19622 | 0.762475 | 6.11927 | 
+| FAST | BRIEF | 314.556 | 2.31953 | 1.67864 | 0.766939 | 4.76511 | 
+| FAST | FREAK | 247.222 | 2.29831 | 24.6845 | 0.904691 | 27.8875 | 
+| BRISK | BRISK | 174.444 | 55.7211 | 2.78576 | 0.496141 | 59.003 | 
+| BRISK | ORB | 167.778 | 55.8678 | 9.79248 | 0.423021 | 66.0833 | 
+| BRISK | BRIEF | 189.333 | 55.6456 | 1.18702 | 0.426823 | 57.2594 | 
+| BRISK | FREAK | 169.556 | 56.7937 | 25.5063 | 0.434178 | 82.7341 | 
+| ORB | BRISK | 83.4444 | 16.353 | 1.33193 | 0.181018 | 17.8659 | 
+| ORB | ORB | 84.5556 | 7.17155 | 9.7346 | 0.155335 | 17.0615 | 
+| ORB | BRIEF | 60.5556 | 7.19071 | 0.754975 | 0.156582 | 8.10226 | 
+| ORB | FREAK | 46.7778 | 7.57427 | 22.6095 | 0.13746 | 30.3212 | 
+
 ### Log runtime of algorithms
 Log the time it takes for keypoint detection and descriptor extraction. The results must be entered into a spreadsheet and based on this data, the TOP3 detector / descriptor combinations must be recommended as the best choice for our purpose of detecting keypoints on vehicles.

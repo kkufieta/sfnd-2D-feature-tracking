@@ -3,13 +3,14 @@
 
 using namespace std;
 
+bool debug = false;
 // Find best matches for keypoints in two camera images based on several
 // matching methods
-void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
-                      std::vector<cv::KeyPoint> &kPtsRef, cv::Mat &descSource,
-                      cv::Mat &descRef, std::vector<cv::DMatch> &matches,
-                      std::string descriptorType, std::string matcherType,
-                      std::string selectorType) {
+float matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
+                       std::vector<cv::KeyPoint> &kPtsRef, cv::Mat &descSource,
+                       cv::Mat &descRef, std::vector<cv::DMatch> &matches,
+                       std::string descriptorType, std::string matcherType,
+                       std::string selectorType) {
   // configure matcher
   bool crossCheck = false;
   cv::Ptr<cv::DescriptorMatcher> matcher;
@@ -18,7 +19,8 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
     int normType = descriptorType.compare("DES_BINARY") == 0 ? cv::NORM_HAMMING
                                                              : cv::NORM_L2;
     matcher = cv::BFMatcher::create(normType, crossCheck);
-    cout << "BF matching";
+    if (debug)
+      cout << "BF matching";
   } else if (matcherType.compare("MAT_FLANN") == 0) {
     if (descSource.type() != CV_32F) { // OpenCV bug workaround : convert binary
                                        // descriptors to floating point due to a
@@ -27,30 +29,36 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
       descRef.convertTo(descRef, CV_32F);
     }
     matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
-    cout << "FLANN matching";
+    if (debug)
+      cout << "FLANN matching";
   }
 
+  double t;
   // perform matching task
   if (selectorType.compare("SEL_NN") == 0) { // nearest neighbor (best match)
-    double t = (double)cv::getTickCount();
+    t = (double)cv::getTickCount();
     matcher->match(
         descSource, descRef,
         matches); // Finds the best match for each descriptor in desc1
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << " (NN) with n=" << matches.size() << " matches in "
-         << 1000 * t / 1.0 << " ms" << endl;
+    if (debug) {
+      cout << " (NN) with n=" << matches.size() << " matches in "
+           << 1000 * t / 1.0 << " ms" << endl;
+    }
   } else if (selectorType.compare("SEL_KNN") ==
              0) { // k nearest neighbors (k=2)
 
     // Implement k-nearest-neighbor matching
     vector<vector<cv::DMatch>> knnMatches;
     int k = 2;
-    double t = (double)cv::getTickCount();
+    t = (double)cv::getTickCount();
     matcher->knnMatch(descSource, descRef, knnMatches,
                       2); // finds the 2 best matches
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << " (kNN) with k=2 and n=" << knnMatches.size() << " matches in "
-         << 1000 * t / 1.0 << " ms" << endl;
+    if (debug) {
+      cout << " (kNN) with k=2 and n=" << knnMatches.size() << " matches in "
+           << 1000 * t / 1.0 << " ms" << endl;
+    }
 
     // Filter matches using descriptor distance ratio test
     float ratio;
@@ -65,16 +73,19 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
         numDiscardedMatches += 1;
       }
     }
-    cout << "Number discarded matches: " << numDiscardedMatches << endl;
-    cout << "Percentage discarded matches: "
-         << numDiscardedMatches / (float)numTotalMatches << endl;
+    if (debug) {
+      cout << "Number discarded matches: " << numDiscardedMatches << endl;
+      cout << "Percentage discarded matches: "
+           << numDiscardedMatches / (float)numTotalMatches << endl;
+    }
   }
+  return 1000 * t / 1.0;
 }
 
 // Use one of several types of state-of-art descriptors to uniquely identify
 // keypoints
-void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
-                   cv::Mat &descriptors, string descriptorType) {
+float descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
+                    cv::Mat &descriptors, string descriptorType) {
   // select appropriate descriptor
   cv::Ptr<cv::DescriptorExtractor> extractor;
   if (descriptorType.compare("BRISK") == 0) {
@@ -102,8 +113,11 @@ void descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   double t = (double)cv::getTickCount();
   extractor->compute(img, keypoints, descriptors);
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-  cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0
-       << " ms" << endl;
+  if (debug) {
+    cout << descriptorType << " descriptor extraction in " << 1000 * t / 1.0
+         << " ms" << endl;
+  }
+  return 1000 * t / 1.0;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -135,8 +149,10 @@ float detKeypointsShiTomasi(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     keypoints.push_back(newKeyPoint);
   }
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-  cout << "Shi-Tomasi corner detection with n=" << keypoints.size()
-       << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  if (debug) {
+    cout << "Shi-Tomasi corner detection with n=" << keypoints.size()
+         << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  }
 
   // visualize results
   if (bVis) {
@@ -205,8 +221,10 @@ float detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     }
   }
 
-  cout << "Harris corner detection with n=" << keypoints.size()
-       << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  if (debug) {
+    cout << "Harris corner detection with n=" << keypoints.size()
+         << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  }
   if (bVis) {
     // visualize results
     cv::Mat vis_image = dst_norm_scaled.clone();
@@ -242,7 +260,9 @@ float detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     detector->detect(img, keypoints);
   }
   t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-  cout << detectorType << " corner detection with n=" << keypoints.size()
-       << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  if (debug) {
+    cout << detectorType << " corner detection with n=" << keypoints.size()
+         << " keypoints in " << 1000 * t / 1.0 << " ms" << endl;
+  }
   return 1000 * t / 1.0;
 }

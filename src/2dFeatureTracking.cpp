@@ -19,10 +19,11 @@
 
 using namespace std;
 
-/* MAIN PROGRAM */
-int main(int argc, const char *argv[]) {
-
+void trackFeatures(string detectorType, string descriptorType,
+                   bool bVis = false, bool printDetectorComparison = false,
+                   bool printDetectorDescriptorComparison = false) {
   /* INIT VARIABLES AND DATA STRUCTURES */
+  bool debug = false;
 
   // data location
   string dataPath = "../";
@@ -43,23 +44,19 @@ int main(int argc, const char *argv[]) {
                                 // buffer) at the same time
   vector<DataFrame> dataBuffer; // list of data frames which are held in memory
                                 // at the same time
-  bool bVis = false;            // visualize results
-
-  /* MAIN LOOP OVER ALL IMAGES */
 
   vector<float> totalNumKeypoints;
   vector<float> detectTimes;
+  vector<float> describeTimes;
+  vector<float> matchTimes;
   vector<float> reducedNumKeypoints;
   vector<float> meanValues;
   vector<float> stddevValues;
-
-  // Detector types:
-  // -> Gradient Based: HARRIS, SHITOMASI, SIFT
-  // -> Binary: BRISK, ORB, AKAZE, FAST
-  string detectorType = "FAST";
-
+  vector<float> numMatches;
+  /* MAIN LOOP OVER ALL IMAGES */
   for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex;
        imgIndex++) {
+
     /* LOAD IMAGE INTO BUFFER */
 
     // assemble filenames for current index
@@ -82,14 +79,14 @@ int main(int argc, const char *argv[]) {
     frame.cameraImg = imgGray;
     dataBuffer.push_back(frame);
 
-    cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
+    if (debug)
+      cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
 
     /* DETECT IMAGE KEYPOINTS */
 
     // extract 2D keypoints from current image
     vector<cv::KeyPoint>
         keypoints; // create empty feature list for current image
-    bool bVis = false;
 
     // Detector types:
     // -> Gradient Based: HARRIS, SHITOMASI, SIFT
@@ -118,8 +115,10 @@ int main(int argc, const char *argv[]) {
       }
     }
     keypoints = focusedKeypoints;
-    cout << "After focusing on car ahead, number of keypoints: "
-         << keypoints.size() << ", " << focusedKeypoints.size() << endl;
+    if (debug) {
+      cout << "After focusing on car ahead, number of keypoints: "
+           << keypoints.size() << ", " << focusedKeypoints.size() << endl;
+    }
     reducedNumKeypoints.push_back(keypoints.size());
 
     auto sum_kps = [](float a, cv::KeyPoint kp) { return a + kp.size; };
@@ -134,8 +133,10 @@ int main(int argc, const char *argv[]) {
 
     meanValues.push_back(mean);
     stddevValues.push_back(variance);
-    cout << "Average keypoint size: " << mean << endl;
-    cout << "Variance: " << variance << endl;
+    if (debug) {
+      cout << "Average keypoint size: " << mean << endl;
+      cout << "Variance: " << variance << endl;
+    }
 
     if (bVis) {
       cv::Mat vis_image = imgGray.clone();
@@ -157,24 +158,28 @@ int main(int argc, const char *argv[]) {
         keypoints.erase(keypoints.begin() + maxKeypoints, keypoints.end());
       }
       cv::KeyPointsFilter::retainBest(keypoints, maxKeypoints);
-      cout << " NOTE: Keypoints have been limited!" << endl;
+      if (debug)
+        cout << " NOTE: Keypoints have been limited!" << endl;
     }
 
     // push keypoints and descriptor for current frame to end of data buffer
     (dataBuffer.end() - 1)->keypoints = keypoints;
-    cout << "#2 : DETECT KEYPOINTS done" << endl;
+    if (debug)
+      cout << "#2 : DETECT KEYPOINTS done" << endl;
 
     /* EXTRACT KEYPOINT DESCRIPTORS */
     cv::Mat descriptors;
-    string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
-    descKeypoints((dataBuffer.end() - 1)->keypoints,
-                  (dataBuffer.end() - 1)->cameraImg, descriptors,
-                  descriptorType);
+    float describeTime = descKeypoints((dataBuffer.end() - 1)->keypoints,
+                                       (dataBuffer.end() - 1)->cameraImg,
+                                       descriptors, descriptorType);
+
+    describeTimes.push_back(describeTime);
 
     // push descriptors for current frame to end of data buffer
     (dataBuffer.end() - 1)->descriptors = descriptors;
 
-    cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
+    if (debug)
+      cout << "#3 : EXTRACT DESCRIPTORS done" << endl;
 
     if (dataBuffer.size() >
         1) // wait until at least two images have been processed
@@ -189,19 +194,21 @@ int main(int argc, const char *argv[]) {
                                    : "DES_BINARY"; // DES_BINARY, DES_HOG
       string selectorType = "SEL_KNN";             // SEL_NN, SEL_KNN
 
-      matchDescriptors((dataBuffer.end() - 2)->keypoints,
-                       (dataBuffer.end() - 1)->keypoints,
-                       (dataBuffer.end() - 2)->descriptors,
-                       (dataBuffer.end() - 1)->descriptors, matches,
-                       descriptorType_, matcherType, selectorType);
+      float matchTime = matchDescriptors(
+          (dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
+          (dataBuffer.end() - 2)->descriptors,
+          (dataBuffer.end() - 1)->descriptors, matches, descriptorType_,
+          matcherType, selectorType);
 
       // store matches in current data frame
       (dataBuffer.end() - 1)->kptMatches = matches;
+      numMatches.push_back(matches.size());
+      matchTimes.push_back(matchTime);
 
-      cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
+      if (debug)
+        cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
       // visualize matches between current and previous image
-      bVis = false;
       if (bVis) {
         cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
         cv::drawMatches((dataBuffer.end() - 2)->cameraImg,
@@ -218,33 +225,96 @@ int main(int argc, const char *argv[]) {
         cout << "Press key to continue to next image" << endl;
         cv::waitKey(0); // wait for key to be pressed
       }
-      bVis = false;
     }
 
   } // eof loop over all images
 
-  auto printStats = [](vector<float> stats) {
-    float sum = 0;
-    for (auto n : stats) {
-      cout << n << " | ";
-      sum += n;
+  if (printDetectorComparison) {
+    auto printStats = [](vector<float> stats) {
+      float sum = 0;
+      for (auto n : stats) {
+        cout << n << " | ";
+        sum += n;
+      }
+      cout << sum / 10 << " | \n";
+    };
+    cout << "| " << detectorType << " | # keypoints | ";
+    printStats(totalNumKeypoints);
+
+    cout << "| | Time [ms] | ";
+    printStats(detectTimes);
+
+    cout << "| | # selected keypoints | ";
+    printStats(reducedNumKeypoints);
+
+    cout << "| | avg. keypoint size | ";
+    printStats(meanValues);
+
+    cout << "| | keypoint size std dev | ";
+    printStats(stddevValues);
+  }
+
+  if (printDetectorComparison && printDetectorDescriptorComparison)
+    cout << "\n\n";
+
+  if (printDetectorDescriptorComparison) {
+    // cout << "| Detector | Descriptor | # avg. matched keypoints | avg. detect
+    // time [ms] | avg. describe time [ms] | avg. match time [ms] | avg. total
+    // processing time [ms] |";
+    auto avgStats = [](vector<float> stats) {
+      float sum = 0;
+      for (float n : stats) {
+        sum += n;
+      }
+      return sum / stats.size();
+    };
+    cout << "| " << detectorType << " | " << descriptorType << " | ";
+    float avgDetectTimes = avgStats(detectTimes);
+    float avgDescribeTimes = avgStats(describeTimes);
+    float avgMatchTimes = avgStats(matchTimes);
+    cout << avgStats(numMatches) << " | " << avgDetectTimes << " | "
+         << avgDescribeTimes << " | " << avgMatchTimes << " | "
+         << (avgDetectTimes + avgDescribeTimes + avgMatchTimes) << " | \n";
+  }
+}
+
+/* MAIN PROGRAM */
+int main(int argc, const char *argv[]) {
+
+  // Detector types:
+  // -> Gradient Based: HARRIS, SHITOMASI, SIFT
+  // -> Binary: BRISK, ORB, AKAZE, FAST
+  string detectorType = "FAST";
+  string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+
+  bool bVis = false; // visualize results
+  bool printDetectorComparison = false;
+  bool printDetectorDescriptorComparison = true;
+
+  // SIFT works only with SIFT
+  detectorType = "SIFT";
+  descriptorType = "SIFT";
+
+  trackFeatures(detectorType, descriptorType, bVis, printDetectorComparison,
+                printDetectorDescriptorComparison);
+
+  // AKAZE works only with AKAZE
+  detectorType = "AKAZE";
+  descriptorType = "AKAZE";
+
+  trackFeatures(detectorType, descriptorType, bVis, printDetectorComparison,
+                printDetectorDescriptorComparison);
+
+  // Try all other combinations of detector + descriptor
+  vector<string> detectors{"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB"};
+  vector<string> descriptors{"BRISK", "ORB", "BRIEF", "FREAK"};
+
+  for (string detectorType : detectors) {
+    for (string descriptorType : descriptors) {
+      trackFeatures(detectorType, descriptorType, bVis, printDetectorComparison,
+                    printDetectorDescriptorComparison);
     }
-    cout << sum / 10 << " | " << endl;
-  };
-  cout << "| " << detectorType << " | # keypoints | ";
-  printStats(totalNumKeypoints);
-
-  cout << "| | Time [ms] | ";
-  printStats(detectTimes);
-
-  cout << "| | # selected keypoints | ";
-  printStats(reducedNumKeypoints);
-
-  cout << "| | avg. keypoint size | ";
-  printStats(meanValues);
-
-  cout << "| | keypoint size std dev | ";
-  printStats(stddevValues);
+  }
 
   return 0;
 }
