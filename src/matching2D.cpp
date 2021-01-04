@@ -3,7 +3,7 @@
 
 using namespace std;
 
-bool debug = false;
+bool debug = true;
 // Find best matches for keypoints in two camera images based on several
 // matching methods
 float matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource,
@@ -253,7 +253,7 @@ float detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     cv::Ptr<cv::BRISK> detector = cv::BRISK::create();
     detector->detect(img, keypoints);
   } else if (detectorType.compare("ORB") == 0) {
-    cv::Ptr<cv::ORB> detector = cv::ORB::create();
+    cv::Ptr<cv::ORB> detector = cv::ORB::create(5000);
     detector->detect(img, keypoints);
   } else if (detectorType.compare("AKAZE") == 0) {
     cv::Ptr<cv::AKAZE> detector = cv::AKAZE::create();

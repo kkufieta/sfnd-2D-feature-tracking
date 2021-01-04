@@ -240,31 +240,6 @@ Task: Count the number of matched keypoints for all 10 images using all possible
 
 Combinations:
 
-| Detector | Descriptor |
-|:-- |:--|
-| SIFT | SIFT |
-| AKAZE | AKAZE |
-|SHITOMASI | BRISK |
-|SHITOMASI | ORB |
-|SHITOMASI | BRIEF |
-|SHITOMASI | FREAK |
-|HARRIS | BRISK |
-|HARRIS | ORB |
-|HARRIS | BRIEF |
-|HARRIS | FREAK |
-|FAST | BRISK |
-|FAST | ORB |
-|FAST | BRIEF |
-|FAST | FREAK |
-|BRISK | BRISK |
-|BRISK | ORB |
-|BRISK | BRIEF |
-|BRISK | FREAK |
-|ORB | BRISK |
-|ORB | ORB |
-|ORB | BRIEF |
-|ORB | FREAK |
-
 | Detector | Descriptor | # avg. matched keypoints | avg. detect time [ms] | avg. describe time [ms] | avg. match time [ms] | avg. total processing time [ms] |
 |:--|:--|:--|:--|:--|:--|:--|
 | SIFT | SIFT | 88.8889 | 135.822 | 106.77 | 0.266392 | 242.858 | 
@@ -292,3 +267,54 @@ Combinations:
 
 ### Log runtime of algorithms
 Log the time it takes for keypoint detection and descriptor extraction. The results must be entered into a spreadsheet and based on this data, the TOP3 detector / descriptor combinations must be recommended as the best choice for our purpose of detecting keypoints on vehicles.
+
+![Comparison of Detector + Descriptor combinations](comparison_detector_descriptor.png)
+
+![Detected keypoints sizes + time](detected_keypoints_sizes.png)
+
+By manually looking at the pictures of the matches and keypoints, we can make roughly these observations:
+* SIFT-SIFT seems to have medium quality results, a few mismatches
+* AKAZE - good quality
+* SHITOMASI looks good with BRISK, BRIEF, ORB, but less so with FREAK
+* HARRIS has only few matches with poor quality in most cases. The quality is better with ORB and BRIEF, although it does still have only few matches
+* FAST delivers a lot of keypoints, and in general looks really good but has a few bad matches. Though I believe that given the big number of keypoints, those are outliers and can be averaged out.
+* FAST looks best with ORB. FREAK adds again poor matches
+* BRISK looks good in general, but has a few bad matches. Oddly enough, it works well with FREAK.
+* ORB has only few points, but a very high quality of matches.
+
+
+All algorithms are relatively fast, with the slowest being SIFT-SIFT which takes ~250 ms. Given that a human reaction time is 0.7 seconds at the least, even SIFT-SIFT results in a faster response time than that of a human, which is why I assume that it is still sufficient for the task at hand. Therefore, my assumption is that none of the combinations has to be disqualified due to a too-high computation time.
+
+Looking at this [paper](https://ieeexplore.ieee.org/document/8346440), it seems like ORB should be a winner. In my analysis, ORB seemed to produce only few keypoints, but that's because you can give it a parameter that specifies the max number of keypoints to be detected. Running ORB again with changing that number from $500$ to $5000$ leads to these updated results:
+
+| Detector | Stats | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Average | 
+|:-- |:-- |:-- |:-- |:-- |:-- |:-- |:-- |:-- |:-- |:-- |:-- | :-- | 
+| ORB | # keypoints | 4847 | 4845 | 4854 | 4851 | 4865 | 4839 | 4858 | 4866 | 4886 | 4870 | 4858.1 | 
+| | Time [ms] | 11.725 | 11.3141 | 12.5931 | 13.0671 | 12.8108 | 10.9946 | 11.5149 | 12.6105 | 14.3578 | 12.793 | 12.3781 | 
+| | # selected keypoints | 617 | 617 | 614 | 623 | 601 | 625 | 610 | 618 | 588 | 583 | 609.6 | 
+| | avg. keypoint size | 55.4486 | 56.1993 | 55.4066 | 55.7565 | 55.9167 | 54.8794 | 55.4962 | 55.0954 | 55.561 | 54.6451 | 55.4405 | 
+| | keypoint size std dev | 560.659 | 590.773 | 561.406 | 574.764 | 593.564 | 576.606 | 588.162 | 555.251 | 571.235 | 557.142 | 572.956 | 
+
+
+| Detector | # keypoints | Time [ms] | # selected keypoints | avg. keypoint size | keypoint size std dev | 
+|:--|:--|:--|:--|:--|:--|
+| ORB | 4858 | 12.378 | 609.6 | 55.44 | 573 |
+
+
+| Detector | Descriptor | # avg. matched keypoints | avg. detect time [ms] | avg. describe time [ms] | avg. match time [ms] | avg. total processing time [ms] |
+|:--|:--|:--|:--|:--|:--|:--|
+| ORB | BRISK | 424.667 | 15.9558 | 5.79998 | 2.03145 | 23.7872 | 
+| ORB | ORB | 420.222 | 12.3781 | 12.3202 | 1.74858 | 26.4469 | 
+| ORB | BRIEF | 300.778 | 11.9165 | 3.09954 | 1.99239 | 17.0084 | 
+| ORB | FREAK | 244.111 | 12.2897 | 26.5335 | 0.718057 | 39.5413 | 
+
+
+By updating the tables and figures above with the new results, we get:
+![Comparison of Detector + Descriptor combinations - updated](comparison_detector_descriptor_updated.png)
+
+![Detected keypoints sizes + time - updated](detected_keypoints_sizes_updated.png)
+
+The visual analysis of the matches and keypoints that we yield by using ORB as a detector are of high quality. Therefore the top 3 choices for detector - descriptor combinations are:
+1. ORB-BRISK
+2. ORB-ORB
+3. FAST-ORB

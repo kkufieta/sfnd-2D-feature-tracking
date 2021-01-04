@@ -287,8 +287,8 @@ int main(int argc, const char *argv[]) {
   string detectorType = "FAST";
   string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
 
-  bool bVis = false; // visualize results
-  bool printDetectorComparison = false;
+  bool bVis = true; // visualize results
+  bool printDetectorComparison = true;
   bool printDetectorDescriptorComparison = true;
 
   // SIFT works only with SIFT
