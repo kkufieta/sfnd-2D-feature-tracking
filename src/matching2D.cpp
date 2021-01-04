@@ -97,7 +97,7 @@ float descKeypoints(vector<cv::KeyPoint> &keypoints, cv::Mat &img,
 
     extractor = cv::BRISK::create(threshold, octaves, patternScale);
   } else if (descriptorType.compare("SIFT") == 0) {
-    extractor = cv::SIFT::create();
+    extractor = cv::xfeatures2d::SIFT::create();
   } else if (descriptorType.compare("ORB") == 0) {
     extractor = cv::ORB::create();
   } else if (descriptorType.compare("AKAZE") ==
@@ -243,7 +243,7 @@ float detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   // Detect keypoints
   double t = (double)cv::getTickCount();
   if (detectorType.compare("SIFT") == 0) {
-    cv::Ptr<cv::SIFT> detector = cv::SIFT::create();
+    cv::Ptr<cv::FeatureDetector> detector = cv::xfeatures2d::SIFT::create();
     detector->detect(img, keypoints);
   } else if (detectorType.compare("FAST") == 0) {
     cv::Ptr<cv::FastFeatureDetector> detector =
